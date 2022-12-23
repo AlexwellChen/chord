@@ -1,4 +1,4 @@
-### Lab2 Chord 
+### Chord DHT
 
 ### Usage
 
