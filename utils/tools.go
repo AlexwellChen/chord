@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
 	"regexp"
@@ -332,4 +333,86 @@ func Getip2() string {
 	json.Unmarshal(body, &ip)
 
 	return ip.Query
+}
+
+func HandleConnection(listener net.Listener, node *Node) {
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Println("Accept failed:", err.Error())
+			continue
+		}
+		go jsonrpc.ServeConn(conn)
+	}
+}
+
+func StartChord(args Arguments) *Node {
+	// Check if the command line arguments are valid
+	valid := CheckArgsValid(args)
+	var node *Node
+	if valid == -1 {
+		fmt.Println("Invalid command line arguments")
+		os.Exit(1)
+	} else {
+		fmt.Println("Valid command line arguments")
+		// Create new Node
+		node = NewNode(args)
+
+		IPAddr := fmt.Sprintf("%s:%d", args.Address, args.Port)
+		tcpAddr, err := net.ResolveTCPAddr("tcp4", IPAddr)
+		if err != nil {
+			fmt.Println("ResolveTCPAddr failed:", err.Error())
+			os.Exit(1)
+		}
+		rpc.Register(node)
+
+		listener, err := net.Listen("tcp", tcpAddr.String())
+		if err != nil {
+			fmt.Println("ListenTCP failed:", err.Error())
+			os.Exit(1)
+		}
+		fmt.Println("Local node listening on ", tcpAddr)
+		// Use a separate goroutine to accept connection
+		go HandleConnection(listener, node)
+
+		if valid == 0 {
+			// Join exsiting chord
+			RemoteAddr := fmt.Sprintf("%s:%d", args.JoinAddress, args.JoinPort)
+
+			// Connect to the remote node
+			fmt.Println("Connecting to the remote node..." + RemoteAddr)
+			err := node.JoinChord(NodeAddress(RemoteAddr))
+			if err != nil {
+				fmt.Println("Join RPC call failed")
+				os.Exit(1)
+			} else {
+				fmt.Println("Join RPC call success")
+			}
+		} else if valid == 1 {
+			// Create new chord
+			node.CreateChord()
+			// Combine address and port, convert port to string
+		}
+
+		// Start periodic tasks
+		Se_stab := ScheduledExecutor{Delay: time.Duration(args.Stabilize) * time.Millisecond, Quit: make(chan int)}
+		Se_stab.Start(func() {
+			node.Stablize()
+		})
+
+		Se_ff := ScheduledExecutor{Delay: time.Duration(args.FixFingers) * time.Millisecond, Quit: make(chan int)}
+		Se_ff.Start(func() {
+			node.FixFingers()
+		})
+
+		Se_cp := ScheduledExecutor{Delay: time.Duration(args.CheckPred) * time.Millisecond, Quit: make(chan int)}
+		Se_cp.Start(func() {
+			node.CheckPredecessor()
+		})
+
+		node.Se_cp = &Se_cp
+		node.Se_ff = &Se_ff
+		node.Se_stab = &Se_stab
+	}
+	return node
 }

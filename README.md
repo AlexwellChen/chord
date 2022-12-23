@@ -16,14 +16,24 @@ The Chord client will be a command-line utility which takes the following argume
 9. -i <String> = The identifier (ID) assigned to the Chord client which will override the ID computed by the SHA1 sum of the client’s IP address and port number. Represented as a string of 40 characters matching [0-9a-fA-F]. Optional parameter.
 
 Exp:
+Exp in src/main.go:
 
-Start a chord at localhost:8000
+Start a chord:
+`go run main.go -a localhost -p 8000 -i hello`
 
-`chord -a localhost -p 8000 --ts 30000 --tff 10000 --tcp 30000 -r 4`
+Join a chord (join hello at localhost:8000):
+`go run main.go -a localhost -p 8001 -i world --ja localhost --jp 8000`
 
-Join a chord from localhost:8080 at localhost:8000
+**Interface in utils**
+Look up a file in chord, return the node address that should store the file
+`utils.ClientLookUp(key, node)`
 
-`chord -a localhost -p 8080 --ja localhost --jp 8000 --ts 30000 --tff 10000 --tcp 30000 -r 4`
+Store a file in chord, return error if failed
+`utils.ClientStoreFile(key, node)`
+
+Get a file from chord, return error if failed
+`utils.ClientGetFile(key, node)`
+
 
 ### Comm between Node
 
