@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"crypto/sha1"
@@ -20,7 +20,7 @@ import (
 */
 
 // verifies n’s immediate
-func (node *Node) stablize() error {
+func (node *Node) Stablize() error {
 	// fmt.Println("***************** Invoke stablize function *****************")
 
 	// First request the successor list of your successor[0]
@@ -71,11 +71,11 @@ func (node *Node) stablize() error {
 			return err
 		}
 		predecessorName := getNameReply.Name
-		nodeId := strHash(string(node.Name))
+		nodeId := StrHash(string(node.Name))
 		nodeId.Mod(nodeId, hashMod)
-		predecessorId := strHash(string(predecessorName))
+		predecessorId := StrHash(string(predecessorName))
 		predecessorId.Mod(predecessorId, hashMod)
-		successorId := strHash(string(successorName))
+		successorId := StrHash(string(successorName))
 		successorId.Mod(successorId, hashMod)
 		if predecessorAddr != "" && between(nodeId,
 			predecessorId, successorId, false) {
@@ -136,7 +136,7 @@ func (node *Node) stablize() error {
 }
 
 // check whether predecessor has failed
-func (node *Node) checkPredecessor() error {
+func (node *Node) CheckPredecessor() error {
 	// fmt.Println("************* Invoke checkPredecessor function **************")
 	pred := node.Predecessor
 	if pred != "" {
@@ -178,7 +178,7 @@ func (node *Node) fingerEntry(fingerentry int) *big.Int {
 }
 
 // refreshes finger table entries, next stores the index of the next finger to fix
-func (node *Node) fixFingers() error {
+func (node *Node) FixFingers() error {
 	// fmt.Println("*************** Invoke fixfinger function ***************")
 	// Lock node.next
 
@@ -237,7 +237,7 @@ func (node *Node) fixFingers() error {
 			return err
 		}
 		successorName := getSuccessorNameRPCReply.Name
-		successorId := strHash(string(successorName))
+		successorId := StrHash(string(successorName))
 		successorId.Mod(successorId, hashMod)
 		if between(node.Identifier, id, successorId, false) && result.SuccessorAddress != "" {
 			if node.FingerTable[node.next].Address != result.SuccessorAddress && result.SuccessorAddress != "" {
@@ -287,11 +287,11 @@ func (node *Node) notify(address NodeAddress) (bool, error) {
 		}
 
 		predcessorName = getPredecessorNameRPCReply.Name
-		predcessorId := strHash(predcessorName)
+		predcessorId := StrHash(predcessorName)
 		predcessorId.Mod(predcessorId, hashMod)
 
 		addressName = getAddressNameRPCReply.Name
-		addressId := strHash(addressName)
+		addressId := StrHash(addressName)
 		addressId.Mod(addressId, hashMod)
 
 		nodeId := node.Identifier
@@ -322,7 +322,7 @@ func (node *Node) moveFiles(addr NodeAddress) {
 		return
 	}
 	addressName = getAddressNameRPCReply.Name
-	addressId := strHash(addressName)
+	addressId := StrHash(addressName)
 	addressId.Mod(addressId, hashMod)
 
 	// Iterate through local bucket

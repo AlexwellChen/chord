@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func (node *Node) closePrecedingNode(requestID *big.Int) NodeAddress {
 			fmt.Println("Error in closePrecedingNode function: ", err)
 			continue
 		}
-		fingerId := strHash(reply.Name)
+		fingerId := StrHash(reply.Name)
 		fingerId.Mod(fingerId, hashMod)
 		if between(node.Identifier, fingerId, requestID, false) {
 			return node.FingerTable[i].Address
@@ -83,7 +83,7 @@ func (node *Node) FindSuccessorRPC(requestID *big.Int, reply *FindSuccessorRPCRe
 		return nil
 	}
 	successorName = getNameRPCReply.Name
-	successorId := strHash(successorName)
+	successorId := StrHash(successorName)
 	successorId.Mod(successorId, hashMod)
 	requestID.Mod(requestID, hashMod)
 

@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"crypto/sha1"
@@ -15,6 +15,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 /*------------------------------------------------------------*/
@@ -72,7 +73,7 @@ type Arguments struct {
 	ClientName  string
 }
 
-func getCmdArgs() Arguments {
+func GetCmdArgs() Arguments {
 	// Read command line arguments
 	var a string  // Current node address
 	var p int     // Current node port
@@ -108,6 +109,23 @@ func getCmdArgs() Arguments {
 		Successors:  r,
 		ClientName:  i,
 	}
+}
+
+// Use Go channel to implement periodic tasks
+func (se *ScheduledExecutor) Start(task func()) {
+	se.Ticker = *time.NewTicker(se.Delay)
+	go func() {
+		for {
+			select {
+			case <-se.Ticker.C:
+				// Use goroutine to run the task to avoid blocking user input
+				go task()
+			case <-se.Quit:
+				se.Ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func CheckArgsValid(args Arguments) int {
@@ -173,7 +191,7 @@ func CheckArgsValid(args Arguments) int {
 	}
 }
 
-func strHash(elt string) *big.Int {
+func StrHash(elt string) *big.Int {
 	hasher := sha1.New()
 	hasher.Write([]byte(elt))
 	return new(big.Int).SetBytes(hasher.Sum(nil))
@@ -187,10 +205,10 @@ func between(start, elt, end *big.Int, inclusive bool) bool {
 	}
 }
 
-func clientLookUp(key string, node *Node) (NodeAddress, error) {
+func ClientLookUp(key string, node *Node) (NodeAddress, error) {
 	// Find the successor of key
 	// Return the successor's address and port
-	newKey := strHash(key) // Use file name as key
+	newKey := StrHash(key) // Use file name as key
 	addr := find(newKey, node.Address)
 
 	if addr == "-1" {
@@ -207,10 +225,10 @@ type FileRPC struct {
 	Content []byte
 }
 
-func clientStoreFile(fileName string, node *Node) error {
+func ClientStoreFile(fileName string, node *Node) error {
 	// Store the file in the node
 	// Return the address and port of the node that stores the file
-	addr, err := clientLookUp(fileName, node)
+	addr, err := ClientLookUp(fileName, node)
 	if err != nil {
 		return err
 	} else {
@@ -229,7 +247,7 @@ func clientStoreFile(fileName string, node *Node) error {
 	newFile := FileRPC{}
 	newFile.Name = fileName
 	newFile.Content, err = ioutil.ReadAll(file)
-	newFile.Id = strHash(fileName)
+	newFile.Id = StrHash(fileName)
 	newFile.Id.Mod(newFile.Id, hashMod)
 	if err != nil {
 		return err
@@ -248,9 +266,9 @@ func clientStoreFile(fileName string, node *Node) error {
 	return nil
 }
 
-func clientGetFile(fileName string, node *Node) error {
+func ClientGetFile(fileName string, node *Node) error {
 	// Get the file from the node
-	addr, err := clientLookUp(fileName, node)
+	addr, err := ClientLookUp(fileName, node)
 	if err != nil {
 		return err
 	} else {
@@ -261,7 +279,7 @@ func clientGetFile(fileName string, node *Node) error {
 	// filepath := currentNodeFileDownloadPath + fileName
 	file := FileRPC{}
 	file.Name = fileName
-	file.Id = strHash(fileName)
+	file.Id = StrHash(fileName)
 	file.Id.Mod(file.Id, hashMod)
 	err = ChordCall(addr, "Node.GetFileRPC", file, &file)
 	if err != nil {
@@ -282,7 +300,7 @@ func clientGetFile(fileName string, node *Node) error {
 	return nil
 }
 
-func getLocalAddress() string {
+func GetLocalAddress() string {
 	// Obtain the local ip address from dns server 8.8.8:80
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -297,7 +315,7 @@ type IP struct {
 	Query string
 }
 
-func getip2() string {
+func Getip2() string {
 	req, err := http.Get("http://ip-api.com/json/")
 	if err != nil {
 		return err.Error()

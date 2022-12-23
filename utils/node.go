@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"crypto/rand"
@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"os"
 	"sync"
+	"time"
 )
 
 /*------------------------------------------------------------*/
@@ -39,6 +40,12 @@ type fingerEntry struct {
 	Address NodeAddress // RemoteAddress
 }
 
+type ScheduledExecutor struct {
+	Delay  time.Duration
+	Ticker time.Ticker
+	Quit   chan int
+}
+
 type Node struct {
 	// Node attributes
 	Name       string   // Name: IP:Port or User specified Name. Exp: [N]14
@@ -62,6 +69,11 @@ type Node struct {
 	// Create bucket in form of map
 	Bucket map[*big.Int]string
 	Backup map[*big.Int]string
+
+	// For periodic stabilization
+	Se_stab *ScheduledExecutor
+	Se_ff   *ScheduledExecutor
+	Se_cp   *ScheduledExecutor
 }
 
 func (node *Node) generateRSAKey(bits int) {
@@ -118,9 +130,9 @@ func NewNode(args Arguments) *Node {
 	if args.Address == "localhost" || args.Address == "127.0.0.1" {
 		localAddress = string(args.Address)
 	} else if args.Address == "0.0.0.0" {
-		localAddress = getip2()
+		localAddress = Getip2()
 	} else {
-		localAddress = getLocalAddress()
+		localAddress = GetLocalAddress()
 	}
 	node.Address = NodeAddress(fmt.Sprintf("%s:%d", localAddress, args.Port))
 	fmt.Println("Node address: ", node.Address)
@@ -129,7 +141,7 @@ func NewNode(args Arguments) *Node {
 	} else {
 		node.Name = args.ClientName
 	}
-	node.Identifier = strHash(string(node.Name))
+	node.Identifier = StrHash(string(node.Name))
 	node.Identifier.Mod(node.Identifier, hashMod)
 	node.FingerTable = make([]fingerEntry, fingerTableSize+1)
 	node.Bucket = make(map[*big.Int]string)
@@ -138,8 +150,8 @@ func NewNode(args Arguments) *Node {
 	node.Predecessor = ""
 	node.Successors = make([]NodeAddress, args.Successors)
 	node.EncryptFlag = true
-	node.initFingerTable()
-	node.initSuccessors()
+	node.InitFingerTable()
+	node.InitSuccessors()
 	// Create temp file folder in current directory
 	tempErr := os.MkdirAll("tmp", os.ModePerm)
 	if tempErr != nil {
@@ -183,7 +195,7 @@ func NewNode(args Arguments) *Node {
 		for _, file := range files {
 			// Store file name in bucket
 			fileName := file.Name()
-			fileHash := strHash(fileName)
+			fileHash := StrHash(fileName)
 			fileHash.Mod(fileHash, hashMod)
 			node.Bucket[fileHash] = fileName
 		}
@@ -210,7 +222,7 @@ func NewNode(args Arguments) *Node {
 * @description: fingerEntry.Id could be seen as the Chord ring address
 * 	            fingerEntry.Address is the real ip address of the file exist node or the node itself
  */
-func (node *Node) initFingerTable() {
+func (node *Node) InitFingerTable() {
 	// Initialize finger table
 	node.FingerTable[0].Id = node.Identifier.Bytes()
 	node.FingerTable[0].Address = node.Address
@@ -227,7 +239,7 @@ func (node *Node) initFingerTable() {
 	}
 }
 
-func (node *Node) initSuccessors() {
+func (node *Node) InitSuccessors() {
 	// Initialize successors
 	successorsSize := len(node.Successors)
 	for i := 0; i < successorsSize; i++ {
@@ -235,7 +247,7 @@ func (node *Node) initSuccessors() {
 	}
 }
 
-func (node *Node) joinChord(joinNode NodeAddress) error {
+func (node *Node) JoinChord(joinNode NodeAddress) error {
 	// Find the successor of the node's identifier
 	// Set the node's predecessor to nil and successors to the exits node
 	// joinNode is the successor of current node, which is node.Successors[0]
@@ -260,7 +272,7 @@ func (node *Node) joinChord(joinNode NodeAddress) error {
 	return nil
 }
 
-func (node *Node) createChord() {
+func (node *Node) CreateChord() {
 	// Create a new Chord ring
 	// Set the node's predecessor to nil and successors to itself
 	node.Predecessor = ""
@@ -270,7 +282,7 @@ func (node *Node) createChord() {
 	}
 }
 
-func (node *Node) printState() {
+func (node *Node) PrintState() {
 	// Print current node state
 	fmt.Println("-------------- Current Node State ------------")
 	fmt.Println("Node Name: ", node.Name)
@@ -496,4 +508,10 @@ func (node *Node) decryptFile(content []byte) []byte {
 		return decryptedContent
 	}
 	return decryptedContent
+}
+
+func (node *Node) Quit() {
+	node.Se_stab.Quit <- 1
+	node.Se_ff.Quit <- 1
+	node.Se_cp.Quit <- 1
 }
