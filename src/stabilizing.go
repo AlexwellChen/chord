@@ -144,8 +144,6 @@ func (node *Node) checkPredecessor() error {
 		ip := strings.Split(string(pred), ":")[0]
 		port := strings.Split(string(pred), ":")[1]
 
-		ip = NAT(ip) // Transalate the internal ip address to public ip address (if external ip is used)
-
 		predAddr := ip + ":" + port
 		_, err := jsonrpc.Dial("tcp", predAddr)
 		if err != nil {
@@ -198,7 +196,7 @@ func (node *Node) fixFingers() error {
 	//find successor of id
 	result := FindSuccessorRPCReply{}
 	err := ChordCall(node.Address, "Node.FindSuccessorRPC", id, &result)
-	if result.Found == false {
+	if !result.Found {
 		fmt.Println("FindSuccessorRPC failed:", result)
 	}
 	if err != nil {
@@ -374,7 +372,7 @@ func (node *Node) NotifyRPC(address NodeAddress, reply *NotifyRPCReply) error {
 	if node.Successors[0] != node.Address {
 		node.moveFiles(address)
 	}
-	reply.Success, _= node.notify(address)
+	reply.Success, _ = node.notify(address)
 	return nil
 }
 

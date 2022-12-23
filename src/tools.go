@@ -38,8 +38,6 @@ func ChordCall(targetNode NodeAddress, method string, request interface{}, reply
 	ip := strings.Split(string(targetNode), ":")[0]
 	port := strings.Split(string(targetNode), ":")[1]
 
-	// ip = NAT(ip) // Transalate the internal ip address to public ip address (if external ip is used)
-
 	targetNodeAddr := ip + ":" + port
 	// conn, err := tls.Dial("tcp", targetNodeAddr, &tls.Config{InsecureSkipVerify: true})
 	// client := jsonrpc.NewClient(conn)
