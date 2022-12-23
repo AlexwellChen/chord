@@ -24,6 +24,7 @@ Join a chord (join hello at localhost:8000):
 `go run main.go -a localhost -p 8001 -i world --ja localhost --jp 8000`
 
 **Interface in utils**  
+
 Look up a file in chord, return the node address that should store the file  
 `utils.ClientLookUp(key, node)`  
 
