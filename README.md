@@ -15,7 +15,7 @@ The Chord client will be a command-line utility which takes the following argume
 8. -r <Number> = The number of successors maintained by the Chord client. Represented as a base-10 integer. Must be specified, with a value in the range of [1,32].
 9. -i <String> = The identifier (ID) assigned to the Chord client which will override the ID computed by the SHA1 sum of the client’s IP address and port number. Represented as a string of 40 characters matching [0-9a-fA-F]. Optional parameter.
 
-Exp in src/main.go:
+### Example code in src/main.go
 
 Start a chord:  
 `go run main.go -a localhost -p 8000 -i hello`
