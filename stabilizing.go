@@ -109,7 +109,7 @@ func (node *Node) Stablize() error {
 		}
 		if v != "" {
 			lastValue = v
-			filepath := "../files/" + node.Name + "/chord_storage/" + v
+			filepath := "tmp/" + node.Name + "/chord_storage/" + v
 			file, err := os.Open(filepath)
 			if err != nil {
 				fmt.Println("Copy to backup: open file failed: ", err)
@@ -329,7 +329,7 @@ func (node *Node) moveFiles(addr NodeAddress) {
 	for key, element := range node.Bucket {
 		fileId := key
 		fileName := element
-		filepath := "../files/" + node.Name + "/chord_storage/" + fileName
+		filepath := "tmp/" + node.Name + "/chord_storage/" + fileName
 		file, err := os.Open(filepath)
 		if err != nil {
 			fmt.Println("Cannot open the file")
@@ -420,7 +420,7 @@ func (node *Node) deleteSuccessorBackup() bool {
 	// Iterate through successor's backup and delete all files
 	for key, _ := range node.Backup {
 
-		// filepath := "../files/" + node.Name + "/chord_storage/" + fileName
+		// filepath := "tmp/" + node.Name + "/chord_storage/" + fileName
 		// err := os.Remove(filepath)
 		// if err != nil {
 		// 	fmt.Println("Cannot delete file: ", fileName)
@@ -442,7 +442,7 @@ func (node *Node) successorStoreFile(f FileRPC) bool {
 	f.Id.Mod(f.Id, hashMod)
 	node.Backup[f.Id] = f.Name
 	// Write file to local
-	filepath := "../files/" + node.Name + "/chord_storage/" + f.Name
+	filepath := "tmp/" + node.Name + "/chord_storage/" + f.Name
 	file, err := os.Create(filepath)
 	if err != nil {
 		fmt.Println("Cannot create backup file")
@@ -474,7 +474,7 @@ func (node *Node) SuccessorStoreFileRPC(f FileRPC, reply *SuccessorStoreFileRPCR
 
 func (node *Node) cleanRedundantFile() {
 	// Read local chord_storage directory
-	files, err := ioutil.ReadDir("../files/" + node.Name + "/chord_storage")
+	files, err := ioutil.ReadDir("tmp/" + node.Name + "/chord_storage")
 	if err != nil {
 		fmt.Println("Cannot read chord_storage directory")
 	}
@@ -503,7 +503,7 @@ func (node *Node) cleanRedundantFile() {
 		}
 		if !inBucket && !inBackup {
 			// Delete file from local chord_storage directory
-			filepath := "../files/" + node.Name + "/chord_storage/" + fileName
+			filepath := "tmp/" + node.Name + "/chord_storage/" + fileName
 			err = os.Remove(filepath)
 			if err != nil {
 				fmt.Println("Cannot delete file: ", fileName)
