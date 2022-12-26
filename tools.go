@@ -226,37 +226,6 @@ type FileRPC struct {
 	Content []byte
 }
 
-func FileIsExisted(filename string) bool {
-	existed := true
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		existed = false
-	}
-	return existed
-}
-
-func CopyFile(src, des string) (written int64, err error) {
-	//获取源文件的权限
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	fi, _ := srcFile.Stat()
-	perm := fi.Mode()
-	srcFile.Close()
-
-	input, err := ioutil.ReadFile(src)
-	if err != nil {
-		return 0, err
-	}
-
-	err = ioutil.WriteFile(des, input, perm)
-	if err != nil {
-		return 0, err
-	}
-
-	return int64(len(input)), nil
-}
-
 func ClientStoreFile(fileName string, node *Node) error {
 	// Store the file in the node
 	// Return the address and port of the node that stores the file
@@ -268,18 +237,6 @@ func ClientStoreFile(fileName string, node *Node) error {
 	}
 	// Open file and pack into fileRPC
 	currentNodeFileUploadPath := "tmp/" + node.Name + "/file_upload/"
-
-	// Check if the file is existed
-	if !FileIsExisted(currentNodeFileUploadPath + fileName) {
-		// Copy the file to currentNodeFileUploadPath
-		_, err = CopyFile(fileName, currentNodeFileUploadPath+fileName)
-		if err != nil {
-			fmt.Println("Cannot copy the file")
-			return err
-		}
-	} else {
-		fmt.Println("File is existed")
-	}
 	filepath := currentNodeFileUploadPath + fileName
 	file, err := os.Open(filepath)
 	if err != nil {
