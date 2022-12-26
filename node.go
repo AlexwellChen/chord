@@ -149,36 +149,42 @@ func NewNode(args Arguments) *Node {
 	node.next = 0 // start from -1, then use fixFingers() to add 1 -> 0 max: m-1
 	node.Predecessor = ""
 	node.Successors = make([]NodeAddress, args.Successors)
-	node.EncryptFlag = true
+	node.EncryptFlag = false
 	node.InitFingerTable()
 	node.InitSuccessors()
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
 	// Create temp file folder in current directory
-	tempErr := os.MkdirAll("./tmp", os.ModePerm)
+	tempErr := os.MkdirAll(currentDir+"/tmp", os.ModePerm)
 	if tempErr != nil {
 		fmt.Println("Create temp file folder failed: " + tempErr.Error())
 		// os.IsNotExist(tempErr)
 	}
 	// Check if ./tmp folder exist
-	if _, err := os.Stat("./tmp" + node.Name); os.IsNotExist(err) {
-		err := os.MkdirAll("./tmp/"+node.Name, os.ModePerm)
+
+	if _, err := os.Stat(currentDir + "/tmp" + node.Name); os.IsNotExist(err) {
+		err := os.MkdirAll(currentDir+"/tmp/"+node.Name, os.ModePerm)
 		if err != nil {
 			fmt.Println("Create Node folder failed: " + err.Error())
 		} else {
 			// Create file_upload folder in Node folder
-			if _, err := os.Stat("./tmp/" + node.Name + "/file_upload"); os.IsNotExist(err) {
+			if _, err := os.Stat(currentDir + "/tmp/" + node.Name + "/file_upload"); os.IsNotExist(err) {
 				os.Mkdir("./tmp/"+node.Name+"/file_upload", os.ModePerm)
 			} else {
 				fmt.Println("file_upload folder already exist")
 			}
 			// Create file_download folder in Node folder
-			if _, err := os.Stat("./tmp/" + node.Name + "/file_download"); os.IsNotExist(err) {
+			if _, err := os.Stat(currentDir + "/tmp/" + node.Name + "/file_download"); os.IsNotExist(err) {
 				os.Mkdir("./tmp/"+node.Name+"/file_download", 0777)
 			} else {
 				fmt.Println("file_download folder already exist")
 			}
 			// Create chord_storage folder in Node folder
-			if _, err := os.Stat("./tmp/" + node.Name + "/chord_storage"); os.IsNotExist(err) {
-				os.Mkdir("./tmp/"+node.Name+"/chord_storage", 0777)
+			if _, err := os.Stat(currentDir + "/tmp/" + node.Name + "/chord_storage"); os.IsNotExist(err) {
+				os.Mkdir(currentDir+"/tmp/"+node.Name+"/chord_storage", 0777)
 			} else {
 				fmt.Println("chord_storage folder already exist")
 			}
@@ -188,7 +194,7 @@ func NewNode(args Arguments) *Node {
 		fmt.Println("Node folder already exist")
 		// Init bucket
 		// Read all files in chord_storage folder
-		files, err := ioutil.ReadDir("./tmp/" + node.Name + "/chord_storage")
+		files, err := ioutil.ReadDir(currentDir + "/tmp/" + node.Name + "/chord_storage")
 		if err != nil {
 			fmt.Println("Read chord_storage folder failed")
 		}
