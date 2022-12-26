@@ -95,7 +95,7 @@ func (node *Node) generateRSAKey(bits int) {
 
 		Bytes: priDerText,
 	}
-	node_files_folder := "tmp/" + node.Name
+	node_files_folder := "./tmp/" + node.Name
 	privateHandler, err := os.Create(node_files_folder + "/private.pem")
 	if err != nil {
 		panic(err)
@@ -153,32 +153,32 @@ func NewNode(args Arguments) *Node {
 	node.InitFingerTable()
 	node.InitSuccessors()
 	// Create temp file folder in current directory
-	tempErr := os.MkdirAll("tmp", os.ModePerm)
+	tempErr := os.MkdirAll("./tmp", os.ModePerm)
 	if tempErr != nil {
 		fmt.Println("Create temp file folder failed: " + tempErr.Error())
 		// os.IsNotExist(tempErr)
 	}
-	// Check if tmp folder exist
-	if _, err := os.Stat("tmp" + node.Name); os.IsNotExist(err) {
-		err := os.MkdirAll("tmp/"+node.Name, os.ModePerm)
+	// Check if ./tmp folder exist
+	if _, err := os.Stat("./tmp" + node.Name); os.IsNotExist(err) {
+		err := os.MkdirAll("./tmp/"+node.Name, os.ModePerm)
 		if err != nil {
 			fmt.Println("Create Node folder failed: " + err.Error())
 		} else {
 			// Create file_upload folder in Node folder
-			if _, err := os.Stat("tmp/" + node.Name + "/file_upload"); os.IsNotExist(err) {
-				os.Mkdir("tmp/"+node.Name+"/file_upload", os.ModePerm)
+			if _, err := os.Stat("./tmp/" + node.Name + "/file_upload"); os.IsNotExist(err) {
+				os.Mkdir("./tmp/"+node.Name+"/file_upload", os.ModePerm)
 			} else {
 				fmt.Println("file_upload folder already exist")
 			}
 			// Create file_download folder in Node folder
-			if _, err := os.Stat("tmp/" + node.Name + "/file_download"); os.IsNotExist(err) {
-				os.Mkdir("tmp/"+node.Name+"/file_download", 0777)
+			if _, err := os.Stat("./tmp/" + node.Name + "/file_download"); os.IsNotExist(err) {
+				os.Mkdir("./tmp/"+node.Name+"/file_download", 0777)
 			} else {
 				fmt.Println("file_download folder already exist")
 			}
 			// Create chord_storage folder in Node folder
-			if _, err := os.Stat("tmp/" + node.Name + "/chord_storage"); os.IsNotExist(err) {
-				os.Mkdir("tmp/"+node.Name+"/chord_storage", 0777)
+			if _, err := os.Stat("./tmp/" + node.Name + "/chord_storage"); os.IsNotExist(err) {
+				os.Mkdir("./tmp/"+node.Name+"/chord_storage", 0777)
 			} else {
 				fmt.Println("chord_storage folder already exist")
 			}
@@ -188,7 +188,7 @@ func NewNode(args Arguments) *Node {
 		fmt.Println("Node folder already exist")
 		// Init bucket
 		// Read all files in chord_storage folder
-		files, err := ioutil.ReadDir("tmp/" + node.Name + "/chord_storage")
+		files, err := ioutil.ReadDir("./tmp/" + node.Name + "/chord_storage")
 		if err != nil {
 			fmt.Println("Read chord_storage folder failed")
 		}
@@ -200,7 +200,7 @@ func NewNode(args Arguments) *Node {
 			node.Bucket[fileHash] = fileName
 		}
 		// Init private key
-		privateHandler, err := os.Open("tmp/" + node.Name + "/private.pem")
+		privateHandler, err := os.Open("./tmp/" + node.Name + "/private.pem")
 		if err != nil {
 			panic(err)
 		}
@@ -363,7 +363,7 @@ func (node *Node) storeChordFile(f FileRPC, backup bool) bool {
 		node.Bucket[f.Id] = f.Name
 		fmt.Println("Store Bucket: ", node.Bucket)
 	}
-	currentNodeFileDownloadPath := "tmp/" + node.Name + "/chord_storage/"
+	currentNodeFileDownloadPath := "./tmp/" + node.Name + "/chord_storage/"
 	filepath := currentNodeFileDownloadPath + f.Name
 	// Create the file on file path and store content
 	file, err := os.Create(filepath)
@@ -386,7 +386,7 @@ func (node *Node) storeLocalFile(f FileRPC) bool {
 	// Return true if success, false if failed
 	// Append the file to the bucket
 	f.Id.Mod(f.Id, hashMod)
-	currentNodeFileDownloadPath := "tmp/" + node.Name + "/file_download/"
+	currentNodeFileDownloadPath := "./tmp/" + node.Name + "/file_download/"
 	filepath := currentNodeFileDownloadPath + f.Name
 	// Create the file on file path and store content
 	file, err := os.Create(filepath)
@@ -465,7 +465,7 @@ func (node *Node) GetFileRPC(f FileRPC, reply *FileRPC) error {
 	}
 
 	// Read the file from the file chord_storage folder
-	currentNodeFileDownloadPath := "tmp/" + node.Name + "/chord_storage/"
+	currentNodeFileDownloadPath := "./tmp/" + node.Name + "/chord_storage/"
 	filepath := currentNodeFileDownloadPath + fileName
 	file, err := os.Open(filepath)
 	if err != nil {
